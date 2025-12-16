@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <title>
+        <%= formTitle %> – Schulbibliothek
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <h1>
+            <%= formTitle %>
+        </h1>
+
+        <form method="post" action="<%= formAction %>">
+            <label>ISBN</label>
+            <input type="text" name="isbn" required value="<%= book ? book.isbn : '' %>">
+
+            <label>Titel</label>
+            <input type="text" name="titel" required value="<%= book ? book.titel : '' %>">
+
+            <label>Beschreibung</label>
+            <textarea name="beschreibung" rows="3"><%= book ? (book.beschreibung || '') : '' %></textarea>
+
+            <label>Autor</label>
+            <input type="text" name="autor" value="<%= book ? (book.autor || '') : '' %>">
+
+            <label>Verlag</label>
+            <input type="text" name="verlag" value="<%= book ? (book.verlag || '') : '' %>">
+
+            <label>Kategorie</label>
+            <input type="text" name="kategorie" value="<%= book ? (book.kategorie || '') : '' %>">
+
+            <label>Anschaffungspreis (€)</label>
+            <input type="number" step="0.01" name="apreis" value="<%= book ? (book.apreis || '') : '' %>">
+
+            <label>Gesamtanzahl Exemplare</label>
+            <input type="number" min="0" name="anzahlges" required value="<%= book ? book.anzahlges : 1 %>">
+
+            <% if (book) { %>
+                <label>Verfügbare Exemplare</label>
+                <input type="number" min="0" name="anzahlver" required value="<%= book.anzahlver %>">
+                <% } else { %>
+                    <input type="hidden" name="anzahlver" value="">
+                    <% } %>
+
+                        <div class="actions">
+                            <button type="submit" class="btn">Speichern</button>
+                            <a href="/admin" class="btn btn-secondary">Abbrechen</a>
+                        </div>
+        </form>
+    </div>
+</body>
+
+</html>

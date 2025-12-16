@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Schulbibliothek</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="topbar">
+            <h1>Schulbibliothek – Bücherliste</h1>
+            <a href="/admin" class="btn">Admin</a>
+        </div>
+
+        <form method="get" class="filters">
+            <input type="text" name="q" size="30" placeholder="Suche nach Titel, Autor, Beschreibung..."
+                value="<%= filters.q %>">
+
+            <select name="kategorie">
+                <option value="">Alle Kategorien</option>
+                <% kategorien.forEach(k=> { %>
+                    <option value="<%= k %>" <%=(filters.kategorie===k ? 'selected' : '' ) %>>
+                        <%= k %>
+                    </option>
+                    <% }) %>
+            </select>
+
+            <select name="verlag">
+                <option value="">Alle Verlage</option>
+                <% verlage.forEach(v=> { %>
+                    <option value="<%= v %>" <%=(filters.verlag===v ? 'selected' : '' ) %>>
+                        <%= v %>
+                    </option>
+                    <% }) %>
+            </select>
+
+            <select name="verfuegbar">
+                <option value="">Alle</option>
+                <option value="1" <%=(filters.verfuegbar==='1' ? 'selected' : '' ) %>>nur verfügbare</option>
+                <option value="0" <%=(filters.verfuegbar==='0' ? 'selected' : '' ) %>>nur ausgeliehene</option>
+            </select>
+
+            <button type="submit">Filtern</button>
+        </form>
+
+        <p class="small">
+            Angezeigte Bücher basieren auf deiner Suche / deinen Filtern.
+        </p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Titel</th>
+                    <th>Autor</th>
+                    <th>Kategorie</th>
+                    <th>Verlag</th>
+                    <th>Verfügbar</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (books.length===0) { %>
+                    <tr>
+                        <td colspan="5">Keine Bücher gefunden.</td>
+                    </tr>
+                    <% } %>
+
+                        <% books.forEach(b=> { %>
+                            <% const rowClass=(b.anzahlver===0) ? 'not-available' : '' ; %>
+                                <tr class="<%= rowClass %>">
+                                    <td>
+                                        <%= b.titel %>
+                                    </td>
+                                    <td>
+                                        <%= b.autor || '' %>
+                                    </td>
+                                    <td>
+                                        <%= b.kategorie || '' %>
+                                    </td>
+                                    <td>
+                                        <%= b.verlag || '' %>
+                                    </td>
+                                    <td>
+                                        <%= b.anzahlver> 0 ? 'verfügbar' : 'nicht verfügbar' %>
+                                    </td>
+                                </tr>
+                                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>

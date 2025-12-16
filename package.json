@@ -1,0 +1,15 @@
+{
+  "name": "schulbibliothek",
+  "version": "1.0.0",
+  "description": "MTSP Schulbibliothek",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "init-db": "node init-db.js"
+  },
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.0",
+    "sqlite3": "^5.1.7"
+  }
+}
