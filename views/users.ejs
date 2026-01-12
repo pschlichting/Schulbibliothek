@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Benutzer verwalten – Schulbibliothek</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="topbar">
+            <h1>Benutzer verwalten</h1>
+            <div>
+                <a href="/admin" class="btn btn-secondary">Zurück zur Admin-Übersicht</a>
+                <a href="/admin/benutzer/new" class="btn">+ Neuer Benutzer</a>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Nachname</th>
+                    <th>Vorname</th>
+                    <th>Klasse</th>
+                    <th>E-Mail</th>
+                    <th>Aktionen</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (users.length === 0) { %>
+                    <tr>
+                        <td colspan="5">Noch keine Benutzer erfasst.</td>
+                    </tr>
+                <% } %>
+
+                <% users.forEach(u => { %>
+                    <tr>
+                        <td><%= u.name %></td>
+                        <td><%= u.vname %></td>
+                        <td><%= u.klasse || '' %></td>
+                        <td><%= u.email || '' %></td>
+                        <td>
+                            <form method="post"
+                                  action="/admin/benutzer/<%= u.id %>/delete"
+                                  onsubmit="return confirm('Benutzer wirklich löschen?');"
+                                  style="display:inline;">
+                                <button type="submit" class="btn">Löschen</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>

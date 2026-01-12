@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Buch ausleihen – Schulbibliothek</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <h1>Buch ausleihen</h1>
+
+        <p>
+            <strong>Buch:</strong>
+            <%= book.titel %> (<%= book.isbn %>)<br>
+            <strong>Verfügbar:</strong>
+            <%= book.anzahlver %> von <%= book.anzahlges %>
+        </p>
+
+        <% if (book.anzahlver <= 0) { %>
+            <p class="small">Keine Exemplare verfügbar – Ausleihe nicht möglich.</p>
+            <a href="/admin" class="btn btn-secondary">Zurück</a>
+        <% } else { %>
+
+            <form method="get" class="filters" style="margin-bottom:12px;">
+                <input type="text" name="name"
+                       placeholder="Nachname / Vorname suchen..."
+                       value="<%= filters && filters.name ? filters.name : '' %>">
+
+                <input type="text" name="klasse"
+                       placeholder="Klasse (z.B. 4ITM)"
+                       value="<%= filters && filters.klasse ? filters.klasse : '' %>">
+
+                <button type="submit">Filtern</button>
+            </form>
+
+            <form method="post" action="/admin/books/<%= book.id %>/loan">
+                <label>Schüler / Benutzer</label>
+                <select name="benutzer_id" required>
+                    <option value="">Bitte auswählen...</option>
+                    <% benutzer.forEach(u => { %>
+                        <option value="<%= u.id %>">
+                            <%= u.name %>, <%= u.vname %> (<%= u.klasse || '' %>)
+                        </option>
+                    <% }) %>
+                </select>
+
+                <div class="actions" style="margin-top:10px;">
+                    <button type="submit" class="btn">Ausleihen</button>
+                    <a href="/admin" class="btn btn-secondary">Abbrechen</a>
+                </div>
+            </form>
+        <% } %>
+    </div>
+</body>
+
+</html>

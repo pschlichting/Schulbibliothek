@@ -258,6 +258,341 @@ app.post('/admin/books/:id/delete', async (req, res) => {
     }
 });
 
+// Benutzer-Liste
+app.get('/admin/benutzer', async (req, res) => {
+    try {
+        const users = await query('SELECT * FROM benutzer ORDER BY name, vname');
+        res.render('users', { users });
+    } catch (err) {
+        console.error('Fehler bei GET /admin/benutzer:', err);
+        res.status(500).send('Datenbankfehler.');
+    }
+});
+
+// Neuen Benutzer anlegen (Formular)
+app.get('/admin/benutzer/new', (req, res) => {
+    res.render('user-form', {
+        formTitle: 'Neuen Benutzer anlegen',
+        formAction: '/admin/benutzer/new',
+        user: null
+    });
+});
+
+// Neuen Benutzer speichern
+app.post('/admin/benutzer/new', async (req, res) => {
+    try {
+        const { vname, name, klasse, email } = req.body;
+
+        await query(
+            'INSERT INTO benutzer (vname, name, klasse, email) VALUES (?, ?, ?, ?)',
+            [vname, name, klasse || null, email || null]
+        );
+
+        res.redirect('/admin/benutzer');
+    } catch (err) {
+        console.error('Fehler bei POST /admin/benutzer/new:', err);
+        res.status(500).send('Datenbankfehler.');
+    }
+});
+
+// Benutzer löschen
+app.post('/admin/benutzer/:id/delete', async (req, res) => {
+    try {
+        const id = req.params.id;
+
+        await query('DELETE FROM benutzer WHERE id = ?', [id]);
+
+        res.redirect('/admin/benutzer');
+    } catch (err) {
+        console.error('Fehler bei POST /admin/benutzer/:id/delete:', err);
+        res
+            .status(500)
+            .send('Benutzer kann nicht gelöscht werden (evtl. noch Ausleihen vorhanden).');
+    }
+});
+
+// Formular: Buch ausleihen
+app.get('/admin/books/:id/loan', async (req, res) => {
+    try {
+        const id = req.params.id;
+
+        const buchRows = await query('SELECT * FROM buch WHERE id = ?', [id]);
+        if (buchRows.length === 0) {
+            return res.status(404).send('Buch nicht gefunden.');
+        }
+
+        const nameFilter = req.query.name || '';
+        const klasseFilter = req.query.klasse || '';
+
+        let benutzerSql = 'SELECT * FROM benutzer WHERE 1';
+        const params = [];
+
+        if (nameFilter.trim() !== '') {
+            benutzerSql += ' AND (name LIKE ? OR vname LIKE ?)';
+            const like = '%' + nameFilter.trim() + '%';
+            params.push(like, like);
+        }
+
+        if (klasseFilter.trim() !== '') {
+            benutzerSql += ' AND klasse = ?';
+            params.push(klasseFilter.trim());
+        }
+
+        benutzerSql += ' ORDER BY name, vname';
+
+        const benutzer = await query(benutzerSql, params);
+
+        res.render('loan-form', {
+            book: buchRows[0],
+            benutzer,
+            filters: {
+                name: nameFilter,
+                klasse: klasseFilter
+            }
+        });
+    } catch (err) {
+        console.error('Fehler bei GET /admin/books/:id/loan:', err);
+        res.status(500).send('Datenbankfehler.');
+    }
+});
+
+// Ausleihe speichern
+app.post('/admin/books/:id/loan', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const benutzerId = req.body.benutzer_id;
+
+        const buchRows = await query('SELECT anzahlver FROM buch WHERE id = ?', [id]);
+        if (buchRows.length === 0) {
+            return res.status(404).send('Buch nicht gefunden.');
+        }
+
+        if (buchRows[0].anzahlver <= 0) {
+            return res.status(400).send('Keine Exemplare verfügbar.');
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+        const bibliothekarId = 1; // Platzhalter
+
+        await query(
+            `INSERT INTO ausleihe (buch_id, benutzer_id, bibliothekar_id, ausleihdatum, rueckgabedatum)
+             VALUES (?, ?, ?, ?, NULL)`,
+            [id, benutzerId, bibliothekarId, today]
+        );
+
+        await query(
+            'UPDATE buch SET anzahlver = anzahlver - 1 WHERE id = ?',
+            [id]
+        );
+
+        res.redirect('/admin/ausleihen');
+    } catch (err) {
+        console.error('Fehler bei POST /admin/books/:id/loan:', err);
+        res.status(500).send('Datenbankfehler.');
+    }
+});
+
+// Übersicht aller Ausleihen
+app.get('/admin/ausleihen', async (req, res) => {
+    try {
+        const nurAktiv = req.query.nurAktiv || '';
+
+        let where = '';
+        const params = [];
+
+        if (nurAktiv === '1') {
+            where = 'WHERE a.rueckgabedatum IS NULL';
+        }
+
+        const sql = `
+            SELECT 
+                a.id,
+                a.ausleihdatum,
+                a.rueckgabedatum,
+                b.titel AS buchtitel,
+                u.vname AS bvname,
+                u.name AS bname,
+                u.klasse AS bklasse
+            FROM ausleihe a
+            JOIN buch b ON a.buch_id = b.id
+            JOIN benutzer u ON a.benutzer_id = u.id
+            ${where}
+            ORDER BY a.ausleihdatum DESC, a.id DESC
+        `;
+
+        const ausleihen = await query(sql, params);
+
+        res.render('loans', { ausleihen, nurAktiv });
+    } catch (err) {
+        console.error('Fehler bei GET /admin/ausleihen:', err);
+        res.status(500).send('Datenbankfehler.');
+    }
+});
+
+// Rückgabe
+app.post('/admin/ausleihen/:id/return', async (req, res) => {
+    try {
+        const ausleiheId = req.params.id;
+
+        const rows = await query(
+            'SELECT buch_id, rueckgabedatum FROM ausleihe WHERE id = ?',
+            [ausleiheId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).send('Ausleihe nicht gefunden.');
+        }
+
+        const ausleihe = rows[0];
+
+        if (ausleihe.rueckgabedatum) {
+            return res.redirect('/admin/ausleihen');
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+
+        await query(
+            'UPDATE ausleihe SET rueckgabedatum = ? WHERE id = ?',
+            [today, ausleiheId]
+        );
+
+        await query(
+            'UPDATE buch SET anzahlver = anzahlver + 1 WHERE id = ?',
+            [ausleihe.buch_id]
+        );
+
+        res.redirect('/admin/ausleihen');
+    } catch (err) {
+        console.error('Fehler bei POST /admin/ausleihen/:id/return:', err);
+        res.status(500).send('Datenbankfehler.');
+    }
+});
+
+
+
+// Formular: Buch ausleihen
+app.get('/admin/books/:id/loan', async (req, res) => {
+    try {
+        const id = req.params.id;
+
+        const buchRows = await query('SELECT * FROM buch WHERE id = ?', [id]);
+        if (buchRows.length === 0) {
+            return res.status(404).send('Buch nicht gefunden.');
+        }
+
+        const benutzer = await query('SELECT * FROM benutzer ORDER BY name, vname');
+
+        res.render('loan-form', {
+            book: buchRows[0],
+            benutzer
+        });
+    } catch (err) {
+        console.error('Fehler bei GET /admin/books/:id/loan:', err);
+        res.status(500).send('Datenbankfehler.');
+    }
+});
+
+// Ausleihe speichern
+app.post('/admin/books/:id/loan', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const benutzerId = req.body.benutzer_id;
+
+        const buchRows = await query('SELECT anzahlver FROM buch WHERE id = ?', [id]);
+        if (buchRows.length === 0) {
+            return res.status(404).send('Buch nicht gefunden.');
+        }
+
+        if (buchRows[0].anzahlver <= 0) {
+            return res.status(400).send('Keine Exemplare verfügbar.');
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+        const bibliothekarId = 1; // Platzhalter: ID des Admins
+
+        await query(
+            `INSERT INTO ausleihe (buch_id, benutzer_id, bibliothekar_id, ausleihdatum, rueckgabedatum)
+             VALUES (?, ?, ?, ?, NULL)`,
+            [id, benutzerId, bibliothekarId, today]
+        );
+
+        await query(
+            'UPDATE buch SET anzahlver = anzahlver - 1 WHERE id = ?',
+            [id]
+        );
+
+        res.redirect('/admin/ausleihen');
+    } catch (err) {
+        console.error('Fehler bei POST /admin/books/:id/loan:', err);
+        res.status(500).send('Datenbankfehler.');
+    }
+});
+
+// Übersicht aller Ausleihen
+app.get('/admin/ausleihen', async (req, res) => {
+    try {
+        const ausleihen = await query(`
+            SELECT 
+                a.id,
+                a.ausleihdatum,
+                a.rueckgabedatum,
+                b.titel AS buchtitel,
+                u.vname AS bvname,
+                u.name AS bname,
+                u.klasse AS bklasse
+            FROM ausleihe a
+            JOIN buch b ON a.buch_id = b.id
+            JOIN benutzer u ON a.benutzer_id = u.id
+            ORDER BY a.ausleihdatum DESC, a.id DESC
+        `);
+
+        res.render('loans', { ausleihen });
+    } catch (err) {
+        console.error('Fehler bei GET /admin/ausleihen:', err);
+        res.status(500).send('Datenbankfehler.');
+    }
+});
+
+// Rückgabe
+app.post('/admin/ausleihen/:id/return', async (req, res) => {
+    try {
+        const ausleiheId = req.params.id;
+
+        const rows = await query(
+            'SELECT buch_id, rueckgabedatum FROM ausleihe WHERE id = ?',
+            [ausleiheId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).send('Ausleihe nicht gefunden.');
+        }
+
+        const ausleihe = rows[0];
+
+        if (ausleihe.rueckgabedatum) {
+            return res.redirect('/admin/ausleihen');
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+
+        await query(
+            'UPDATE ausleihe SET rueckgabedatum = ? WHERE id = ?',
+            [today, ausleiheId]
+        );
+
+        await query(
+            'UPDATE buch SET anzahlver = anzahlver + 1 WHERE id = ?',
+            [ausleihe.buch_id]
+        );
+
+        res.redirect('/admin/ausleihen');
+    } catch (err) {
+        console.error('Fehler bei POST /admin/ausleihen/:id/return:', err);
+        res.status(500).send('Datenbankfehler.');
+    }
+});
+
+
 app.listen(PORT, () => {
     console.log(`Server läuft auf http://localhost:${PORT}`);
 });

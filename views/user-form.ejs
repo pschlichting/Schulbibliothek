@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <title><%= formTitle %> – Schulbibliothek</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <h1><%= formTitle %></h1>
+
+        <form method="post" action="<%= formAction %>">
+            <label>Vorname</label>
+            <input type="text" name="vname" required
+                   value="<%= user ? user.vname : '' %>">
+
+            <label>Nachname</label>
+            <input type="text" name="name" required
+                   value="<%= user ? user.name : '' %>">
+
+            <label>Klasse</label>
+            <input type="text" name="klasse"
+                   value="<%= user ? (user.klasse || '') : '' %>">
+
+            <label>E-Mail</label>
+            <input type="text" name="email"
+                   value="<%= user ? (user.email || '') : '' %>">
+
+            <div class="actions" style="margin-top:10px;">
+                <button type="submit" class="btn">Speichern</button>
+                <a href="/admin/benutzer" class="btn btn-secondary">Abbrechen</a>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>

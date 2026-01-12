@@ -1,72 +1,72 @@
 <!DOCTYPE html>
 <html lang="de">
-
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Admin – Schulbibliothek</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/style.css">
-</head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
 
-<body>
+  <body>
     <div class="wrap">
-        <div class="topbar">
-            <h1>Admin – Bücher verwalten</h1>
-            <div>
-                <a href="/" class="btn btn-secondary">Zur öffentlichen Ansicht</a>
-                <a href="/admin/books/new" class="btn">+ Neues Buch</a>
+      <div class="topbar">
+        <h1>Admin – Bücher verwalten</h1>
+        <div>
+            <a href="/" class="btn btn-secondary">Zur öffentlichen Ansicht</a>
+            <a href="/admin/ausleihen" class="btn btn-secondary">Ausleihen</a>
+            <a href="/admin/benutzer" class="btn btn-secondary">Benutzer</a>
+            <a href="/admin/books/new" class="btn">+ Neues Buch</a>
             </div>
-        </div>
+      </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Titel</th>
-                    <th>Autor</th>
-                    <th>Kategorie</th>
-                    <th>Exemplare (verfügbar/gesamt)</th>
-                    <th>Aktionen</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (books.length===0) { %>
-                    <tr>
-                        <td colspan="5">Noch keine Bücher erfasst.</td>
-                    </tr>
-                    <% } %>
+      <table>
+        <thead>
+          <tr>
+            <th>Titel</th>
+            <th>Autor</th>
+            <th>Kategorie</th>
+            <th>Exemplare (verfügbar/gesamt)</th>
+            <th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (books.length===0) { %>
+          <tr>
+            <td colspan="5">Noch keine Bücher erfasst.</td>
+          </tr>
+          <% } %> <% books.forEach(b=> { %> <% const rowClass=(b.anzahlver===0)
+          ? 'not-available' : '' ; %>
+          <tr class="<%= rowClass %>">
+            <td><%= b.titel %></td>
+            <td><%= b.autor || '' %></td>
+            <td><%= b.kategorie || '' %></td>
+            <td><%= b.anzahlver %> / <%= b.anzahlges %></td>
+            <td>
+              <div class="actions">
+                <a href="/admin/books/<%= b.id %>/loan" class="btn"
+                  >Ausleihen</a
+                >
 
-                        <% books.forEach(b=> { %>
-                            <% const rowClass=(b.anzahlver===0) ? 'not-available' : '' ; %>
-                                <tr class="<%= rowClass %>">
-                                    <td>
-                                        <%= b.titel %>
-                                    </td>
-                                    <td>
-                                        <%= b.autor || '' %>
-                                    </td>
-                                    <td>
-                                        <%= b.kategorie || '' %>
-                                    </td>
-                                    <td>
-                                        <%= b.anzahlver %> / <%= b.anzahlges %>
-                                    </td>
-                                    <td>
-                                        <div class="actions">
-                                            <a href="/admin/books/<%= b.id %>/edit"
-                                                class="btn btn-secondary">Bearbeiten</a>
+                <a
+                  href="/admin/books/<%= b.id %>/edit"
+                  class="btn btn-secondary"
+                  >Bearbeiten</a
+                >
 
-                                            <form method="post" action="/admin/books/<%= b.id %>/delete"
-                                                onsubmit="return confirm('Buch wirklich löschen?');"
-                                                style="display:inline;">
-                                                <button type="submit" class="btn">Löschen</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <% }) %>
-            </tbody>
-        </table>
+                <form
+                  method="post"
+                  action="/admin/books/<%= b.id %>/delete"
+                  onsubmit="return confirm('Buch wirklich löschen?');"
+                  style="display: inline"
+                >
+                  <button type="submit" class="btn">Löschen</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
     </div>
-</body>
-
+  </body>
 </html>

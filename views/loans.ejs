@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Aktuelle Ausleihen – Schulbibliothek</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="topbar">
+            <h1>Ausleihen</h1>
+            <div>
+                <a href="/admin" class="btn btn-secondary">Zur Admin-Übersicht</a>
+            </div>
+        </div>
+
+        <form method="get" class="filters" style="margin-bottom:12px;">
+            <label class="small">
+                <input type="checkbox" name="nurAktiv" value="1"
+                       <%= nurAktiv === '1' ? 'checked' : '' %>>
+                nur aktuell ausgeliehene anzeigen
+            </label>
+            <button type="submit">Anwenden</button>
+        </form>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Buch</th>
+                    <th>Benutzer</th>
+                    <th>Ausleihdatum</th>
+                    <th>Rückgabedatum</th>
+                    <th>Aktion</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (ausleihen.length === 0) { %>
+                    <tr>
+                        <td colspan="5">Keine Ausleihen gefunden.</td>
+                    </tr>
+                <% } %>
+
+                <% ausleihen.forEach(a => { %>
+                    <tr class="<%= a.rueckgabedatum ? '' : 'not-available' %>">
+                        <td><%= a.buchtitel %></td>
+                        <td><%= a.bname %>, <%= a.bvname %> (<%= a.bklasse || '' %>)</td>
+                        <td><%= a.ausleihdatum %></td>
+                        <td><%= a.rueckgabedatum || 'noch ausgeliehen' %></td>
+                        <td>
+                            <% if (!a.rueckgabedatum) { %>
+                                <form method="post"
+                                      action="/admin/ausleihen/<%= a.id %>/return"
+                                      onsubmit="return confirm('Ausleihe wirklich als zurückgegeben markieren?');"
+                                      style="display:inline;">
+                                    <button type="submit" class="btn">Zurückgeben</button>
+                                </form>
+                            <% } else { %>
+                                –
+                            <% } %>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>
