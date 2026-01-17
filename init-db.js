@@ -68,7 +68,7 @@ INSERT INTO benutzer (vname, name, klasse, email) VALUES
 
 -- Testdaten: Bibliothekar (Platzhalter-Hash)
 INSERT INTO bibliothekar (vname, name, email, bename, passwort_hash) VALUES
-  ('Max', 'Mustermann', 'max.mustermann@school.at', 'admin', 'PLATZHALTER');
+  ('Max', 'Mustermann', 'max.mustermann@school.at', 'admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9');
 
 -- Testdaten: Bücher
 INSERT INTO buch
