@@ -1,0 +1,23 @@
+# Node / npm
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Umgebungsvariablen (falls du später .env benutzt)
+.env
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Betriebssystem-Dateien
+.DS_Store
+Thumbs.db
+
+# SQLite Temp-Dateien (Log- und Lockfiles)
+*.sqlite3-journal
+*.db-journal
+*.db-shm
+*.db-wal
