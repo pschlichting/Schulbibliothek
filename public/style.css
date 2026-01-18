@@ -107,3 +107,9 @@ textarea {
 textarea {
     resize: vertical;
 }
+
+a.btn,
+button.btn {
+    margin-right: 4px;
+    margin-bottom: 4px;
+}
