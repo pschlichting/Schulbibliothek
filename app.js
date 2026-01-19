@@ -1,8 +1,8 @@
-const express = require('express');
-const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
-const session = require('express-session');
-const crypto = require('crypto');
+const express = require('express');             // Express-Framework laden
+const path = require('path');                   // Pfade für Dateien auflösen
+const sqlite3 = require('sqlite3').verbose();   // SQLite-Datenbank
+const session = require('express-session');     // Sessions für Login
+const crypto = require('crypto');               // für Passwort-Hash
 
 const app = express();
 const PORT = 3000;
