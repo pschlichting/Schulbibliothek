@@ -4,26 +4,32 @@
     <meta charset="UTF-8" />
     <title>Admin – Schulbibliothek</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Bootstrap CSS von CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
       crossorigin="anonymous">
-    <link rel="stylesheet" href="/style.css">
 
+    <!-- eigenes CSS -->
+    <link rel="stylesheet" href="/style.css">
   </head>
 
   <body>
     <div class="wrap">
       <div class="topbar">
         <% 
+          // Lokale Hilfsvariablen für Filter (falls nichts übergeben)
           const f = (typeof filters !== 'undefined')
                 ? filters
                 : { q: '', kategorie: '', verlag: '', verfuegbar: '' };
 
+          // Listen für Dropdowns (Kategorien, Verlage)
           const kats = (typeof kategorien !== 'undefined') ? kategorien : [];
           const vers = (typeof verlage !== 'undefined') ? verlage : [];
         %>
 
+        <!-- Überschrift + Navigation zu anderen Admin-Seiten -->
         <h1>Admin – Bücher verwalten</h1>
         <div>
             <a href="/" class="btn btn-secondary">Zur öffentlichen Ansicht</a>
@@ -31,97 +37,108 @@
             <a href="/admin/benutzer" class="btn btn-secondary">Benutzer</a>
             <a href="/admin/books/new" class="btn">+ Neues Buch</a>
             <a href="/logout" class="btn btn-secondary">Logout</a>
-            </div>
+        </div>
       </div>
 
-              <form method="get" class="filters">
-            <input type="text"
-                   name="q"
-                   size="30"
-                   placeholder="Suche nach Titel, Autor, Beschreibung..."
-                   value="<%= f.q %>">
+      <!-- Filter-Formular für die Buchliste (Admin-Ansicht) -->
+      <form method="get" class="filters">
+        <input type="text"
+               name="q"
+               size="30"
+               placeholder="Suche nach Titel, Autor, Beschreibung..."
+               value="<%= f.q %>">
 
-            <select name="kategorie">
-                <option value="">Alle Kategorien</option>
-                <% kats.forEach(k => { %>
-                    <option value="<%= k %>" <%= (f.kategorie === k ? 'selected' : '') %>>
-                        <%= k %>
-                    </option>
-                <% }) %>
-            </select>
-
-            <select name="verlag">
-                <option value="">Alle Verlage</option>
-                <% vers.forEach(v => { %>
-                    <option value="<%= v %>" <%= (f.verlag === v ? 'selected' : '') %>>
-                        <%= v %>
-                    </option>
-                <% }) %>
-            </select>
-
-            <select name="verfuegbar">
-                <option value="">Alle</option>
-                <option value="1" <%= (f.verfuegbar === '1' ? 'selected' : '') %>>
-                    nur verfügbare
+        <!-- Filter nach Kategorie -->
+        <select name="kategorie">
+            <option value="">Alle Kategorien</option>
+            <% kats.forEach(k => { %>
+                <option value="<%= k %>" <%= (f.kategorie === k ? 'selected' : '') %>>
+                    <%= k %>
                 </option>
-                <option value="0" <%= (f.verfuegbar === '0' ? 'selected' : '') %>>
-                    nur ausgeliehene
+            <% }) %>
+        </select>
+
+        <!-- Filter nach Verlag -->
+        <select name="verlag">
+            <option value="">Alle Verlage</option>
+            <% vers.forEach(v => { %>
+                <option value="<%= v %>" <%= (f.verlag === v ? 'selected' : '') %>>
+                    <%= v %>
                 </option>
-            </select>
+            <% }) %>
+        </select>
 
-            <button type="submit">Filtern</button>
-        </form>
+        <!-- Filter nach Verfügbarkeit -->
+        <select name="verfuegbar">
+            <option value="">Alle</option>
+            <option value="1" <%= (f.verfuegbar === '1' ? 'selected' : '') %>>
+                nur verfügbare
+            </option>
+            <option value="0" <%= (f.verfuegbar === '0' ? 'selected' : '') %>>
+                nur ausgeliehene
+            </option>
+        </select>
 
+        <button type="submit">Filtern</button>
+      </form>
 
+      <!-- Tabelle aller Bücher in der Admin-Ansicht -->
       <div class="table-responsive">
-      <table class="table table-striped">
-        <thead>
-          <tr>
-            <th>Titel</th>
-            <th>Autor</th>
-            <th>Kategorie</th>
-            <th>Exemplare (verfügbar/gesamt)</th>
-            <th>Aktionen</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% if (books.length===0) { %>
-          <tr>
-            <td colspan="5">Noch keine Bücher erfasst.</td>
-          </tr>
-          <% } %> <% books.forEach(b=> { %> <% const rowClass=(b.anzahlver===0)
-          ? 'not-available' : '' ; %>
-          <tr class="<%= rowClass %>">
-            <td><%= b.titel %></td>
-            <td><%= b.autor || '' %></td>
-            <td><%= b.kategorie || '' %></td>
-            <td><%= b.anzahlver %> / <%= b.anzahlges %></td>
-            <td>
-              <div class="actions">
-                <a href="/admin/books/<%= b.id %>/loan" class="btn"
-                  >Ausleihen</a
-                >
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Titel</th>
+              <th>Autor</th>
+              <th>Kategorie</th>
+              <th>Exemplare (verfügbar/gesamt)</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (books.length===0) { %>
+              <!-- Meldung, wenn keine Bücher vorhanden sind -->
+              <tr>
+                <td colspan="5">Noch keine Bücher erfasst.</td>
+              </tr>
+            <% } %>
 
-                <a
-                  href="/admin/books/<%= b.id %>/edit"
-                  class="btn btn-secondary"
-                  >Bearbeiten</a
-                >
+            <% 
+              // Schleife über alle Bücher
+              books.forEach(b=> { 
+                const rowClass = (b.anzahlver===0) ? 'not-available' : '';
+            %>
+              <tr class="<%= rowClass %>">
+                <td><%= b.titel %></td>
+                <td><%= b.autor || '' %></td>
+                <td><%= b.kategorie || '' %></td>
+                <td><%= b.anzahlver %> / <%= b.anzahlges %></td>
+                <td>
+                  <div class="actions">
+                    <!-- Ausleihen-Button für dieses Buch -->
+                    <a href="/admin/books/<%= b.id %>/loan" class="btn">
+                      Ausleihen
+                    </a>
 
-                <form
-                  method="post"
-                  action="/admin/books/<%= b.id %>/delete"
-                  onsubmit="return confirm('Buch wirklich löschen?');"
-                  style="display: inline"
-                >
-                  <button type="submit" class="btn">Löschen</button>
-                </form>
-              </div>
-            </td>
-          </tr>
-          <% }) %>
-        </tbody>
-      </table>
+                    <!-- Bearbeiten-Button für dieses Buch -->
+                    <a href="/admin/books/<%= b.id %>/edit" class="btn btn-secondary">
+                      Bearbeiten
+                    </a>
+
+                    <!-- Formular zum Löschen des Buchs -->
+                    <form
+                      method="post"
+                      action="/admin/books/<%= b.id %>/delete"
+                      onsubmit="return confirm('Buch wirklich löschen?');"
+                      style="display: inline"
+                    >
+                      <button type="submit" class="btn">Löschen</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
       </div>
     </div>
   </body>

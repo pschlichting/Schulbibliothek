@@ -5,9 +5,11 @@ const sqlite3 = require('sqlite3').verbose();
 const dbPath = path.join(__dirname, 'schulbibliothek.db');
 const db = new sqlite3.Database(dbPath);
 
+// SQL-Schema + Testdaten
 const schema = `
 PRAGMA foreign_keys = OFF;
 
+-- Tabelen zuerst löschen, falls schon existieren
 DROP TABLE IF EXISTS ausleihe;
 DROP TABLE IF EXISTS buch;
 DROP TABLE IF EXISTS benutzer;
@@ -15,7 +17,7 @@ DROP TABLE IF EXISTS bibliothekar;
 
 PRAGMA foreign_keys = ON;
 
--- Tabelle: Benutzer (Schüler:innen / Lehrkräfte)
+-- Tabelle: Benutzer
 CREATE TABLE benutzer (
   id      INTEGER PRIMARY KEY AUTOINCREMENT,
   vname   TEXT NOT NULL,
@@ -48,7 +50,7 @@ CREATE TABLE buch (
   anzahlver   INTEGER NOT NULL
 );
 
--- Tabelle: Ausleihe
+-- Tabelle: Ausleihe (Verknüpfung Buch + Benutzer + Bibliothekar)
 CREATE TABLE ausleihe (
   id              INTEGER PRIMARY KEY AUTOINCREMENT,
   buch_id         INTEGER NOT NULL,
@@ -64,11 +66,12 @@ CREATE TABLE ausleihe (
 -- Testdaten: Benutzer
 INSERT INTO benutzer (vname, name, klasse, email) VALUES
   ('Phillipp', 'Schlichting', '4ITM', 'phillipp.schlichting@school.at'),
-  ('Paul', 'Berger', '3ITM', 'paul.berger@school.at');
+  ('Paul', 'Berger', '3ME', 'paul.berger@school.at');
 
--- Testdaten: Bibliothekar (Platzhalter-Hash)
+-- Testdaten: Bibliothekar
+-- Passwort "admin123" (mit SHA-256 gehasht)
 INSERT INTO bibliothekar (vname, name, email, bename, passwort_hash) VALUES
-  ('Max', 'Mustermann', 'max.mustermann@school.at', 'admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9');
+  ('Max', 'Musterman', 'max.musterman@school.at', 'admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9');
 
 -- Testdaten: Bücher
 INSERT INTO buch
@@ -103,6 +106,7 @@ VALUES
    1);
 `;
 
+// Schema und Testdaten ausführen
 db.exec(schema, (err) => {
     if (err) {
         console.error('Fehler beim Initialisieren der SQLite-DB:', err);

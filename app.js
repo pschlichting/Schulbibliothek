@@ -17,23 +17,26 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Formulardaten auslesen
 app.use(express.urlencoded({ extended: false }));
 
+// Session-Konfiguration (für Login/admin session)
 app.use(session({
     secret: 'irgendein-langer-geheimer-string',
     resave: false,
     saveUninitialized: false
 }));
 
-// SQLite-DB
+// Pfad zur SQLite-DB
 const dbPath = path.join(__dirname, 'schulbibliothek.db');
 const db = new sqlite3.Database(dbPath);
 
+// Passwort mit SHA-256 hashen
 function hashPassword(plain) {
     return crypto.createHash('sha256').update(plain).digest('hex');
 }
 
+// nur eingeloggte Benutzer dürfen Admin-Seiten sehen
 function requireLogin(req, res, next) {
     if (!req.session || !req.session.user) {
-        return res.redirect('/login');
+        return res.redirect('/login');          // Wenn ned eingeloggt -> zurück zur login-seite
     }
     next();
 }
@@ -62,40 +65,49 @@ function query(sql, params = []) {
 // Startseite: Bücherliste + Filter
 app.get('/', async (req, res) => {
     try {
+        // Filter-Werte aus Query-Parameter holen
         const q = req.query.q || '';
         const kategorie = req.query.kategorie || '';
         const verlag = req.query.verlag || '';
         const verfuegbar = req.query.verfuegbar || '';
 
+        // Grund-SQL: alle Bücher
         let sql = 'SELECT * FROM buch WHERE 1';
         const params = [];
 
+        // text-Suche für Titel, Beschreibung, Autor
         if (q.trim() !== '') {
             sql += ' AND (titel LIKE ? OR beschreibung LIKE ? OR autor LIKE ?)';
             const like = '%' + q.trim() + '%';
             params.push(like, like, like);
         }
 
+        // Filter nach Kategorie
         if (kategorie.trim() !== '') {
             sql += ' AND kategorie = ?';
             params.push(kategorie.trim());
         }
 
+        // Filter nach Verlag
         if (verlag.trim() !== '') {
             sql += ' AND verlag = ?';
             params.push(verlag.trim());
         }
 
+        // Filter nach Verfügbarkeit
         if (verfuegbar === '1') {
-            sql += ' AND anzahlver > 0';
+            sql += ' AND anzahlver > 0';    // verfügbare
         } else if (verfuegbar === '0') {
-            sql += ' AND anzahlver = 0';
+            sql += ' AND anzahlver = 0';    // ausgeliehene
         }
 
-        sql += ' ORDER BY titel';
+        // nach Titel sortieren alphabetisch
+        sql += ' ORDER BY titel';  
 
+        // Bücher laut Filter holen
         const books = await query(sql, params);
 
+        // Einmal alle vorhandenen Kategorien holen (für Dropdown)
         const kategorienRows = await query(`
       SELECT DISTINCT kategorie
       FROM buch
@@ -103,6 +115,7 @@ app.get('/', async (req, res) => {
       ORDER BY kategorie
     `);
 
+        // Einmal alle vorhandenen Verlage holen (für Dropdown)
         const verlageRows = await query(`
       SELECT DISTINCT verlag
       FROM buch
@@ -113,6 +126,7 @@ app.get('/', async (req, res) => {
         const kategorien = kategorienRows.map(r => r.kategorie);
         const verlage = verlageRows.map(r => r.verlag);
 
+        // index.ejs rendern
         res.render('index', {
             books,
             filters: { q, kategorie, verlag, verfuegbar },
@@ -128,6 +142,7 @@ app.get('/', async (req, res) => {
 // Admin-Übersicht mit Filtern
 app.get('/admin', requireLogin, async (req, res) => {
     try {
+        // gleiche Filter wie Startseite
         const q = req.query.q || '';
         const kategorie = req.query.kategorie || '';
         const verlag = req.query.verlag || '';
@@ -179,6 +194,7 @@ app.get('/admin', requireLogin, async (req, res) => {
         const kategorien = kategorienRows.map(r => r.kategorie);
         const verlage = verlageRows.map(r => r.verlag);
 
+        // admin.ejs rendern
         res.render('admin', {
             books,
             filters: { q, kategorie, verlag, verfuegbar },
@@ -196,7 +212,7 @@ app.get('/admin/books/new', requireLogin, (req, res) => {
     res.render('book-form', {
         formTitle: 'Neues Buch anlegen',
         formAction: '/admin/books/new',
-        book: null
+        book: null  // kein vorhandene Buch → formular leer
     });
 });
 
@@ -214,6 +230,7 @@ app.post('/admin/books/new', requireLogin, async (req, res) => {
             anzahlges
         } = req.body;
 
+        // Anzahl Gesamt-Exemplare
         const gesamt = parseInt(anzahlges, 10) || 0;
 
         const sql = `
@@ -233,7 +250,7 @@ app.post('/admin/books/new', requireLogin, async (req, res) => {
             kategorie || null,
             apreis || null,
             gesamt,
-            gesamt
+            gesamt  // am anfang sind alle Exemplare da
         ]);
 
         res.redirect('/admin');
@@ -256,7 +273,7 @@ app.get('/admin/books/:id/edit', requireLogin, async (req, res) => {
         res.render('book-form', {
             formTitle: 'Buch bearbeiten',
             formAction: `/admin/books/${id}/edit`,
-            book: rows[0]
+            book: rows[0]   // vorhandenes Buch ins Formular einsetzen
         });
     } catch (err) {
         console.error('Fehler bei GET /admin/books/:id/edit:', err);
@@ -280,6 +297,7 @@ app.post('/admin/books/:id/edit', requireLogin, async (req, res) => {
             anzahlver
         } = req.body;
 
+        // Eingaben für Anzahl prüfen
         let gesamt = parseInt(anzahlges, 10);
         if (isNaN(gesamt) || gesamt < 0) gesamt = 0;
 
@@ -336,6 +354,7 @@ app.post('/admin/books/:id/delete', requireLogin, async (req, res) => {
 // Benutzer-Liste mit Filtern
 app.get('/admin/benutzer', requireLogin, async (req, res) => {
     try {
+        // Filter aus Query-Params
         const filterName   = req.query.name   || '';
         const filterVname  = req.query.vname  || '';
         const filterKlasse = req.query.klasse || '';
@@ -369,6 +388,7 @@ app.get('/admin/benutzer', requireLogin, async (req, res) => {
 
         const users = await query(sql, params);
 
+        // users.ejs rendern
         res.render('users', {
             users,
             error,
@@ -411,12 +431,12 @@ app.post('/admin/benutzer/new', requireLogin, async (req, res) => {
     }
 });
 
-// Benutzer löschen
+// Benutzer löschen (wenn kein buch)
 app.post('/admin/benutzer/:id/delete', requireLogin, async (req, res) => {
     try {
         const id = req.params.id;
 
-        // offene Ausleihen für diesen Benutzer?
+        // prüfen ob Benutzer noch Ausleihen hat
         const rows = await query(
             'SELECT COUNT(*) AS cnt FROM ausleihe WHERE benutzer_id = ? AND rueckgabedatum IS NULL',
             [id]
@@ -425,11 +445,11 @@ app.post('/admin/benutzer/:id/delete', requireLogin, async (req, res) => {
         const offene = rows[0].cnt;
 
         if (offene > 0) {
-            // Zurück zur Liste mit Hinweismeldung
+            // Benutzer hat noch ausgeliehene bücher → Fehlermeldung
             return res.redirect('/admin/benutzer?error=hasLoans');
         }
 
-        // keine offenen Ausleihen → löschen erlaubt
+        // keine ofenen asleihen -> löschen erlaubt
         await query('DELETE FROM benutzer WHERE id = ?', [id]);
 
         res.redirect('/admin/benutzer');
@@ -440,7 +460,7 @@ app.post('/admin/benutzer/:id/delete', requireLogin, async (req, res) => {
 });
 
 
-// Formular: Buch ausleihen
+// Formular: Buch ausleihen (filter für benutzer)
 app.get('/admin/books/:id/loan', requireLogin, async (req, res) => {
     try {
         const id = req.params.id;
@@ -450,6 +470,7 @@ app.get('/admin/books/:id/loan', requireLogin, async (req, res) => {
             return res.status(404).send('Buch nicht gefunden.');
         }
 
+        // Filter für benutzer (Name, Klasse)
         const nameFilter = req.query.name || '';
         const klasseFilter = req.query.klasse || '';
 
@@ -488,27 +509,30 @@ app.get('/admin/books/:id/loan', requireLogin, async (req, res) => {
 // Ausleihe speichern
 app.post('/admin/books/:id/loan', requireLogin, async (req, res) => {
     try {
-        const id = req.params.id;
-        const benutzerId = req.body.benutzer_id;
+        const id = req.params.id;      // Buch-ID
+        const benutzerId = req.body.benutzer_id;    // gewählter Benutzer
 
         const buchRows = await query('SELECT anzahlver FROM buch WHERE id = ?', [id]);
         if (buchRows.length === 0) {
             return res.status(404).send('Buch nicht gefunden.');
         }
 
+        // prüfen ob noch Exemplar da ist
         if (buchRows[0].anzahlver <= 0) {
             return res.status(400).send('Keine Exemplare verfügbar.');
         }
 
-        const today = new Date().toISOString().slice(0, 10);
-        const bibliothekarId = 1; // Platzhalter
+        const today = new Date().toISOString().slice(0, 10);    // Datum (YYYY-MM-DD)
+        const bibliothekarId = 1;
 
+        // Ausleihe eintragen
         await query(
             `INSERT INTO ausleihe (buch_id, benutzer_id, bibliothekar_id, ausleihdatum, rueckgabedatum)
              VALUES (?, ?, ?, ?, NULL)`,
             [id, benutzerId, bibliothekarId, today]
         );
 
+        // das Exemplar runterzehlen
         await query(
             'UPDATE buch SET anzahlver = anzahlver - 1 WHERE id = ?',
             [id]
@@ -521,12 +545,12 @@ app.post('/admin/books/:id/loan', requireLogin, async (req, res) => {
     }
 });
 
-// Übersicht aller Ausleihen mit Filtern
+// Übersicht aller Ausleihen + Filtern
 app.get('/admin/ausleihen', requireLogin, async (req, res) => {
     try {
-        const nurAktiv = req.query.nurAktiv || '';
-        const titel    = req.query.titel    || '';
-        const benutzer = req.query.benutzer || '';
+        const nurAktiv = req.query.nurAktiv || '';  // Checkbox: nur "nicht zurückgegebene"
+        const titel    = req.query.titel    || '';  // Filter nach Buchtitel
+        const benutzer = req.query.benutzer || '';  // Filter nach Benutzer vor- nachname
 
         const conditions = [];
         const params = [];
@@ -580,11 +604,12 @@ app.get('/admin/ausleihen', requireLogin, async (req, res) => {
     }
 });
 
-// Rückgabe
+// Rückgabe ausleihe
 app.post('/admin/ausleihen/:id/return', requireLogin, async (req, res) => {
     try {
         const ausleiheId = req.params.id;
 
+        // passende Ausleihe holen
         const rows = await query(
             'SELECT buch_id, rueckgabedatum FROM ausleihe WHERE id = ?',
             [ausleiheId]
@@ -596,17 +621,20 @@ app.post('/admin/ausleihen/:id/return', requireLogin, async (req, res) => {
 
         const ausleihe = rows[0];
 
+        // wenn bereits zurückgegeben → wieder zur übersicht
         if (ausleihe.rueckgabedatum) {
             return res.redirect('/admin/ausleihen');
         }
 
         const today = new Date().toISOString().slice(0, 10);
 
+        // Rückgabedatum 
         await query(
             'UPDATE ausleihe SET rueckgabedatum = ? WHERE id = ?',
             [today, ausleiheId]
         );
 
+        // verfügbares Exemplar wieder dazu zähln
         await query(
             'UPDATE buch SET anzahlver = anzahlver + 1 WHERE id = ?',
             [ausleihe.buch_id]
@@ -629,6 +657,7 @@ app.post('/login', async (req, res) => {
     try {
         const { bename, passwort } = req.body;
 
+        // Admin in Tabelle "bibliothekar" suchn
         const rows = await query('SELECT * FROM bibliothekar WHERE bename = ?', [bename]);
         if (rows.length === 0) {
             return res.render('login', { error: 'Benutzer oder Passwort falsch.' });
@@ -637,6 +666,7 @@ app.post('/login', async (req, res) => {
         const admin = rows[0];
         const hash = hashPassword(passwort);
 
+        // Hash-Vergleich mit gespeicherten Hash
         if (hash !== admin.passwort_hash) {
             return res.render('login', { error: 'Benutzer oder Passwort falsch.' });
         }
@@ -663,6 +693,7 @@ app.get('/logout', (req, res) => {
     });
 });
 
+// Server starten
 app.listen(PORT, () => {
     console.log(`Server läuft auf http://localhost:${PORT}`);
 });

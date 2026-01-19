@@ -1,115 +1,127 @@
+/* Grundlayout der Seite */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
+  font-family: Arial, sans-serif; /* Schriftart für die komplette Seite */
+  background-color: #f5f5f5; /* Hellgrauer Hintergrund hinter dem weißen Content-Block */
 }
 
+/* Haupt-Container für den Seiteninhalt */
 .wrap {
-    max-width: 1000px;
-    margin: 20px auto;
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  max-width: 1000px; /* maximale Breite in der Mitte */
+  margin: 20px auto; /* zentriert mit Abstand nach oben/unten */
+  background: #ffffff; /* weißer Hintergrund */
+  padding: 20px; /* Innenabstand */
+  border-radius: 8px; /* leicht abgerundete Ecken */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* leichte Schattenkante */
 }
 
+/* Überschriften allgemein */
 h1 {
-    margin-top: 0;
+  margin-top: 0; /* keinen zusätzlichen Rand nach oben */
 }
 
+/* obere Leiste mit Titel + Buttons (Admin, Logout, ...) */
 .topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
+  display: flex; /* nebeneinander anordnen */
+  justify-content: space-between; /* Titel links, Buttons rechts */
+  align-items: center; /* vertikal mittig ausrichten */
+  margin-bottom: 12px; /* Abstand nach unten */
 }
 
+/* Bereich für Filterformulare (Suche, Dropdowns, etc.) */
 .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 15px;
+  display: flex;
+  flex-wrap: wrap; /* Zeilenumbruch bei wenig Platz erlauben */
+  gap: 8px; /* Abstand zwischen den Feldern */
+  margin-bottom: 15px; /* Abstand nach unten zur Tabelle */
 }
 
+/* Eingabefelder und Auswahllisten im Filterbereich */
 .filters input[type="text"],
 .filters select {
-    padding: 4px 6px;
+  padding: 4px 6px; /* kleiner Innenabstand */
 }
 
+/* Tabellen-Layout */
 table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 5px;
+  width: 100%; /* Tabelle nimmt komplette Breite ein */
+  border-collapse: collapse; /* keine doppelten Rahmen */
+  margin-top: 5px; /* kleiner Abstand nach oben */
 }
 
+/* Tabellenköpfe und Zellen */
 th,
 td {
-    border-bottom: 1px solid #ddd;
-    padding: 6px 8px;
-    text-align: left;
+  border-bottom: 1px solid #ddd; /* untere Trennlinie zwischen Zeilen */
+  padding: 6px 8px; /* Innenabstand in Zellen */
+  text-align: left; /* Text linksbündig */
 }
 
+/* Tabellenkopfzeile */
 th {
-    background-color: #ff3333;
-    color: #fff;
+  background-color: #ff3333; /* roter Hintergrund (passend zu Buttons) */
+  color: #fff; /* weiße Schrift */
 }
 
+/* Hintergrundfarbe für jede zweite Tabellenzeile */
 tr:nth-child(even) {
-    background-color: #f9f9f9;
+  background-color: #f9f9f9;
 }
 
+/* Zeilenklasse für "nicht verfügbare" Einträge (z.B. ausgeliehene Bücher) */
 tr.not-available {
-    color: #777;
+  color: #777; /* etwas ausgegrauter Text */
 }
 
+/* Kleine Beschriftungstexte (Info-Zeilen) */
 .small {
-    font-size: 0.9em;
-    color: #666;
+  font-size: 0.9em;
+  color: #666;
 }
 
+/* Standard-Button (auch für <a class="btn">) */
 a.btn,
 button.btn {
-    text-decoration: none;
-    padding: 4px 8px;
-    background: #ff3333;
-    color: #fff;
-    border-radius: 4px;
-    font-size: 0.9em;
-    border: none;
-    cursor: pointer;
+  text-decoration: none; /* kein Unterstrich bei Links */
+  padding: 4px 8px; /* Schaltflächengröße */
+  background: #ff3333; /* roter Hintergrund */
+  color: #fff; /* weiße Schrift */
+  border-radius: 4px; /* leicht abgerundet */
+  font-size: 0.9em; /* etwas kleinere Schrift */
+  border: none; /* kein Standard-Rand */
+  cursor: pointer; /* Mauszeiger als Hand */
 }
 
+/* Zweiter Button-Stil (grau, z.B. für „Zurück“ / „Logout“) */
 a.btn-secondary,
 button.btn-secondary {
-    background: #777;
+  background: #777;
 }
 
+/* Container für mehrere Buttons (z.B. unter Formularen) */
 .actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+  display: flex;
+  flex-wrap: wrap; /* bei wenig Platz umbrechen */
+  gap: 4px; /* Abstand zwischen Buttons */
 }
 
+/* Labels für Formularfelder */
 label {
-    display: block;
-    margin-top: 8px;
-    margin-bottom: 2px;
-    font-weight: bold;
+  display: block; /* jedes Label auf eigener Zeile */
+  margin-top: 8px;
+  margin-bottom: 2px;
+  font-weight: bold; /* etwas hervorgehoben */
 }
 
+/* Standard-Eingabefelder und Textareas im Formularbereich */
 input[type="text"],
 input[type="number"],
 textarea {
-    width: 100%;
-    padding: 4px 6px;
-    box-sizing: border-box;
+  width: 100%; /* volle Breite */
+  padding: 4px 6px;
+  box-sizing: border-box; /* Padding in die Breite einrechnen */
 }
 
+/* Textarea-Einstellungen */
 textarea {
-    resize: vertical;
-}
-
-a.btn,
-button.btn {
-    margin-right: 4px;
-    margin-bottom: 4px;
+  resize: vertical; /* nur vertikal vergrößerbar */
 }

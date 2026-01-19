@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
     <meta charset="UTF-8">
     <title>Schulbibliothek</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap + eigenes CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
@@ -15,87 +16,95 @@
 <body>
     <div class="wrap">
         <div class="topbar">
+            <!-- Titel der Seite -->
             <h1>Schulbibliothek – Bücherliste</h1>
+
+            <!-- Link in den Admin-Bereich (Login nötig) -->
             <a href="/admin" class="btn">Admin</a>
         </div>
 
+        <!-- Filter-Formular für öffentliche Bücherliste -->
         <form method="get" class="filters">
-            <input type="text" name="q" size="30" placeholder="Suche nach Titel, Autor, Beschreibung..."
-                value="<%= filters.q %>">
+            <!-- Volltextsuche -->
+            <input type="text" name="q" size="30"
+                   placeholder="Suche nach Titel, Autor, Beschreibung..."
+                   value="<%= filters.q %>">
 
+            <!-- Filter nach Kategorie -->
             <select name="kategorie">
                 <option value="">Alle Kategorien</option>
                 <% kategorien.forEach(k=> { %>
-                    <option value="<%= k %>" <%=(filters.kategorie===k ? 'selected' : '' ) %>>
+                    <option value="<%= k %>" <%= (filters.kategorie===k ? 'selected' : '' ) %>>
                         <%= k %>
                     </option>
-                    <% }) %>
+                <% }) %>
             </select>
 
+            <!-- Filter nach Verlag -->
             <select name="verlag">
                 <option value="">Alle Verlage</option>
                 <% verlage.forEach(v=> { %>
-                    <option value="<%= v %>" <%=(filters.verlag===v ? 'selected' : '' ) %>>
+                    <option value="<%= v %>" <%= (filters.verlag===v ? 'selected' : '' ) %>>
                         <%= v %>
                     </option>
-                    <% }) %>
+                <% }) %>
             </select>
 
+            <!-- Filter nach Verfügbarkeit -->
             <select name="verfuegbar">
                 <option value="">Alle</option>
-                <option value="1" <%=(filters.verfuegbar==='1' ? 'selected' : '' ) %>>nur verfügbare</option>
-                <option value="0" <%=(filters.verfuegbar==='0' ? 'selected' : '' ) %>>nur ausgeliehene</option>
+                <option value="1" <%= (filters.verfuegbar==='1' ? 'selected' : '' ) %>>
+                    nur verfügbare
+                </option>
+                <option value="0" <%= (filters.verfuegbar==='0' ? 'selected' : '' ) %>>
+                    nur ausgeliehene
+                </option>
             </select>
 
             <button type="submit">Filtern</button>
         </form>
 
+        <!-- kleine Erklärung zur Filterung -->
         <p class="small">
             Angezeigte Bücher basieren auf deiner Suche / deinen Filtern.
         </p>
 
+        <!-- Tabelle mit allen gefundenen Büchern -->
         <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Titel</th>
-                    <th>Autor</th>
-                    <th>Kategorie</th>
-                    <th>Verlag</th>
-                    <th>Verfügbar</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (books.length===0) { %>
+            <table class="table table-striped">
+                <thead>
                     <tr>
-                        <td colspan="5">Keine Bücher gefunden.</td>
+                        <th>Titel</th>
+                        <th>Autor</th>
+                        <th>Kategorie</th>
+                        <th>Verlag</th>
+                        <th>Verfügbar</th>
                     </tr>
+                </thead>
+                <tbody>
+                    <% if (books.length===0) { %>
+                        <!-- Meldung, wenn nichts gefunden wurde -->
+                        <tr>
+                            <td colspan="5">Keine Bücher gefunden.</td>
+                        </tr>
                     <% } %>
 
-                        <% books.forEach(b=> { %>
-                            <% const rowClass=(b.anzahlver===0) ? 'not-available' : '' ; %>
-                                <tr class="<%= rowClass %>">
-                                    <td>
-                                        <%= b.titel %>
-                                    </td>
-                                    <td>
-                                        <%= b.autor || '' %>
-                                    </td>
-                                    <td>
-                                        <%= b.kategorie || '' %>
-                                    </td>
-                                    <td>
-                                        <%= b.verlag || '' %>
-                                    </td>
-                                    <td>
-                                        <%= b.anzahlver> 0 ? 'verfügbar' : 'nicht verfügbar' %>
-                                    </td>
-                                </tr>
-                                <% }) %>
-            </tbody>
-        </table>
+                    <% 
+                      // Schleife über alle Bücher
+                      books.forEach(b=> { 
+                        const rowClass=(b.anzahlver===0) ? 'not-available' : '';
+                    %>
+                        <tr class="<%= rowClass %>">
+                            <td><%= b.titel %></td>
+                            <td><%= b.autor || '' %></td>
+                            <td><%= b.kategorie || '' %></td>
+                            <td><%= b.verlag || '' %></td>
+                            <td><%= b.anzahlver > 0 ? 'verfügbar' : 'nicht verfügbar' %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
         </div>
     </div>
 </body>
-
 </html>

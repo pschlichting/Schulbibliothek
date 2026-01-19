@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
     <meta charset="UTF-8">
     <title>Buch ausleihen – Schulbibliothek</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap + eigenes CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
       integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
@@ -16,6 +17,7 @@
     <div class="wrap">
         <h1>Buch ausleihen</h1>
 
+        <!-- Kurze Info zum ausgewählten Buch -->
         <p>
             <strong>Buch:</strong>
             <%= book.titel %> (<%= book.isbn %>)<br>
@@ -24,10 +26,12 @@
         </p>
 
         <% if (book.anzahlver <= 0) { %>
+            <!-- Wenn kein Exemplar verfügbar → nur Info und zurück -->
             <p class="small">Keine Exemplare verfügbar – Ausleihe nicht möglich.</p>
             <a href="/admin" class="btn btn-secondary">Zurück</a>
         <% } else { %>
 
+            <!-- Filterformular zum Suchen eines Benutzers -->
             <form method="get" class="filters" style="margin-bottom:12px;">
                 <input type="text" name="name"
                        placeholder="Nachname / Vorname suchen..."
@@ -40,6 +44,7 @@
                 <button type="submit">Filtern</button>
             </form>
 
+            <!-- Formular zum tatsächlichen Ausleihen (POST) -->
             <form method="post" action="/admin/books/<%= book.id %>/loan">
                 <label>Schüler / Benutzer</label>
                 <select name="benutzer_id" required>
@@ -59,5 +64,4 @@
         <% } %>
     </div>
 </body>
-
 </html>
