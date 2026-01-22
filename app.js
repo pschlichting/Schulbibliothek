@@ -77,9 +77,9 @@ app.get('/', async (req, res) => {
 
         // text-Suche für Titel, Beschreibung, Autor
         if (q.trim() !== '') {
-            sql += ' AND (titel LIKE ? OR beschreibung LIKE ? OR autor LIKE ?)';
+            sql += ' AND (titel LIKE ? OR autor LIKE ? OR verlag LIKE ? OR kategorie LIKE ?)';
             const like = '%' + q.trim() + '%';
-            params.push(like, like, like);
+            params.push(like, like, like, like);
         }
 
         // Filter nach Kategorie
@@ -152,7 +152,7 @@ app.get('/admin', requireLogin, async (req, res) => {
         const params = [];
 
         if (q.trim() !== '') {
-            sql += ' AND (titel LIKE ? OR beschreibung LIKE ? OR autor LIKE ?)';
+            sql += ' AND (titel LIKE ? OR autor LIKE ? OR kategorie LIKE ?)';
             const like = '%' + q.trim() + '%';
             params.push(like, like, like);
         }
@@ -212,7 +212,7 @@ app.get('/admin/books/new', requireLogin, (req, res) => {
     res.render('book-form', {
         formTitle: 'Neues Buch anlegen',
         formAction: '/admin/books/new',
-        book: null  // kein vorhandene Buch → formular leer
+        book: null  // kein vorhandene Buch -> formular leer
     });
 });
 
@@ -445,7 +445,7 @@ app.post('/admin/benutzer/:id/delete', requireLogin, async (req, res) => {
         const offene = rows[0].cnt;
 
         if (offene > 0) {
-            // Benutzer hat noch ausgeliehene bücher → Fehlermeldung
+            // Benutzer hat noch ausgeliehene bücher -> Fehlermeldung
             return res.redirect('/admin/benutzer?error=hasLoans');
         }
 
@@ -621,7 +621,7 @@ app.post('/admin/ausleihen/:id/return', requireLogin, async (req, res) => {
 
         const ausleihe = rows[0];
 
-        // wenn bereits zurückgegeben → wieder zur übersicht
+        // wenn bereits zurückgegeben -> wieder zur übersicht
         if (ausleihe.rueckgabedatum) {
             return res.redirect('/admin/ausleihen');
         }
